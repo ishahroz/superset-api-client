@@ -4,6 +4,7 @@ This config adds an /api/v1/execute_sql_json/ endpoint under OAuth authenticatio
 allow running queries through the API. Standard Superset only has /superset/sql_json/
 which is only accessible via a browser.
 """
+
 import logging
 from typing import Optional, cast
 

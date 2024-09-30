@@ -1,8 +1,9 @@
 """CSS Templates."""
+
 from dataclasses import dataclass
 from typing import Optional
 
-from supersetapiclient.base import Object, ObjectFactories, default_string, raise_for_status
+from supersetapiclient.base import Object, ObjectFactories, default_string
 
 
 @dataclass

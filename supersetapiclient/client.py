@@ -1,4 +1,5 @@
 """A Superset REST Api Client."""
+
 import getpass
 import logging
 
@@ -15,12 +16,12 @@ import requests_oauthlib
 from supersetapiclient.assets import Assets
 from supersetapiclient.base import raise_for_status
 from supersetapiclient.charts import Charts
+from supersetapiclient.css_templates import CssTemplates
 from supersetapiclient.dashboards import Dashboards
 from supersetapiclient.databases import Databases
 from supersetapiclient.datasets import Datasets
 from supersetapiclient.exceptions import QueryLimitReached
 from supersetapiclient.saved_queries import SavedQueries
-from supersetapiclient.css_templates import CssTemplates
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,6 @@ class SupersetClient:
         self.provider = provider
         if not verify:
             self.http_adapter_cls = NoVerifyHTTPAdapter
-        
         self.firstname = firstname
         self.lastname = lastname
 
@@ -62,10 +62,10 @@ class SupersetClient:
         self.assets = self.assets_cls(self)
         self.dashboards = self.dashboards_cls(self)
         self.charts = self.charts_cls(self)
+        self.css_templates = self.css_templates_cls(self)
         self.datasets = self.datasets_cls(self)
         self.databases = self.databases_cls(self)
         self.saved_queries = self.saved_queries_cls(self)
-        self.css_templates = self.css_templates_cls(self)
 
     @cached_property
     def _token(self):
@@ -210,7 +210,7 @@ class SupersetClient:
     @property
     def refresh_endpoint(self) -> str:
         return self.join_urls(self.base_url, "security/refresh")
-    
+
     @property
     def guest_token_endpoint(self) -> str:
         return self.join_urls(self.base_url, "security/guest_token/")
@@ -227,8 +227,8 @@ class SupersetClient:
         )
         raise_for_status(csrf_response)  # Check CSRF Token went well
         return csrf_response.json().get("result")
-    
-    def guest_token(self, uuid: str) -> dict:
+
+    def guest_token(self, uuid: str) -> str:
         """Retrieve a guest token from the Superset API.
 
         :param uuid: The UUID of the resource (e.g., dashboard).
@@ -237,18 +237,9 @@ class SupersetClient:
         """
         # Construct the request body
         request_body = {
-            "resources": [
-                {
-                    "id": uuid,
-                    "type": "dashboard"
-                }
-            ],
+            "resources": [{"id": uuid, "type": "dashboard"}],
             "rls": [],
-            "user": {
-                "first_name": self.firstname,
-                "last_name": self.lastname,
-                "username": self.username
-            }
+            "user": {"first_name": self.firstname, "last_name": self.lastname, "username": self.username},
         }
 
         response = self.post(self.guest_token_endpoint, json=request_body)

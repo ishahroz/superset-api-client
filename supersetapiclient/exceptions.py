@@ -1,4 +1,5 @@
 """Custom Exception."""
+
 import json
 
 from requests import HTTPError
