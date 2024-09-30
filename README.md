@@ -39,6 +39,11 @@ dashboards = client.dashboards.find()
 dashboard = client.dashboards.find(dashboard_title="Example")[0]
 ```
 
+To delete a dashboard:
+```python3
+dashboard.delete()
+```
+
 Update dashboard colors, some properties and save changes to server:
 ```python3
 # Update label_colors mapping
@@ -65,6 +70,15 @@ Create the embed configuration for a dashboard:
 embed = dashboard.create_embed(allowed_domains=[])
 ```
 
+Copy a dashboard:
+```python3
+dashboard_copy = dashboard.copy_dashboard(dashboard_payload={
+    "css": "",
+    "dashboard_title": "your-new-dashboard-title",
+    "duplicate_slices": False,
+    "json_metadata": "{}",
+})
+```
 
 ### Export one ore more dashboard
 
