@@ -79,6 +79,17 @@ dashboard.export(
 This functionality is also available in the same manner for datasets
 
 
+### Retrieve a Guest Token
+
+You can retrieve a guest token using the `guest_token` method. This method requires the UUID of the resource (e.g., dashboard) and uses the user's first name, last name, and username from the client instance.
+
+#### Example Usage:
+```python3
+# Retrieve a guest token
+guest_token = client.guest_token(uuid="your-example-uuid")
+```
+
+
 # Contributing
 Before committing to this repository, you must have [pre-commit](https://pre-commit.com) installed, and install
 the following pre-commit hooks:

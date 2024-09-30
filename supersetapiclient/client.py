@@ -42,6 +42,8 @@ class SupersetClient:
         password=None,
         provider="db",
         verify=True,
+        firstname="Superset",
+        lastname="Admin",
     ):
         self.host = host
         self.base_url = self.join_urls(host, "api/v1")
@@ -50,6 +52,9 @@ class SupersetClient:
         self.provider = provider
         if not verify:
             self.http_adapter_cls = NoVerifyHTTPAdapter
+        
+        self.firstname = firstname
+        self.lastname = lastname
 
         # Related Objects
         self.assets = self.assets_cls(self)
@@ -202,6 +207,10 @@ class SupersetClient:
     @property
     def refresh_endpoint(self) -> str:
         return self.join_urls(self.base_url, "security/refresh")
+    
+    @property
+    def guest_token_endpoint(self) -> str:
+        return self.join_urls(self.base_url, "security/guest_token/")
 
     @property
     def _sql_endpoint(self) -> str:
@@ -215,6 +224,33 @@ class SupersetClient:
         )
         raise_for_status(csrf_response)  # Check CSRF Token went well
         return csrf_response.json().get("result")
+    
+    def guest_token(self, uuid: str) -> dict:
+        """Retrieve a guest token from the Superset API.
+
+        :param uuid: The UUID of the resource (e.g., dashboard).
+        :type uuid: str
+        :return: Guest token as a dictionary.
+        """
+        # Construct the request body
+        request_body = {
+            "resources": [
+                {
+                    "id": uuid,
+                    "type": "dashboard"
+                }
+            ],
+            "rls": [],
+            "user": {
+                "first_name": self.firstname,
+                "last_name": self.lastname,
+                "username": self.username
+            }
+        }
+
+        response = self.post(self.guest_token_endpoint, json=request_body)
+        raise_for_status(response)  # Check for errors in the response
+        return response.json().get("token")
 
 
 class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
