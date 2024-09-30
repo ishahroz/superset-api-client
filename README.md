@@ -55,6 +55,17 @@ dashboard.dashboard_title = "New title"
 dashboard.save()
 ```
 
+Get the embed configuration for a dashboard:
+```python3
+embed = dashboard.get_embed()
+```
+
+Create the embed configuration for a dashboard:
+```python3
+embed = dashboard.create_embed(allowed_domains=[])
+```
+
+
 ### Export one ore more dashboard
 
 You may export one or more dashboard user `client.dashboards` or directly on a `dashboard` object
@@ -79,6 +90,18 @@ dashboard.export(
 This functionality is also available in the same manner for datasets
 
 
+<<<<<<< Updated upstream
+=======
+### Retrieve a Guest Token
+
+You can retrieve a guest token using the `guest_token` method. This method requires the UUID of the resource (e.g., dashboard) and uses the user's first name, last name, and username from the client instance.
+
+```python3
+guest_token = client.guest_token(uuid="your-example-uuid")
+```
+
+
+>>>>>>> Stashed changes
 # Contributing
 Before committing to this repository, you must have [pre-commit](https://pre-commit.com) installed, and install
 the following pre-commit hooks:
