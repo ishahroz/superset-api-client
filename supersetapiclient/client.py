@@ -20,6 +20,7 @@ from supersetapiclient.databases import Databases
 from supersetapiclient.datasets import Datasets
 from supersetapiclient.exceptions import QueryLimitReached
 from supersetapiclient.saved_queries import SavedQueries
+from supersetapiclient.css_templates import CssTemplates
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ class SupersetClient:
     datasets_cls = Datasets
     databases_cls = Databases
     saved_queries_cls = SavedQueries
+    css_templates_cls = CssTemplates
     http_adapter_cls = None
 
     def __init__(
@@ -63,6 +65,7 @@ class SupersetClient:
         self.datasets = self.datasets_cls(self)
         self.databases = self.databases_cls(self)
         self.saved_queries = self.saved_queries_cls(self)
+        self.css_templates = self.css_templates_cls(self)
 
     @cached_property
     def _token(self):

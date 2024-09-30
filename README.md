@@ -39,6 +39,11 @@ dashboards = client.dashboards.find()
 dashboard = client.dashboards.find(dashboard_title="Example")[0]
 ```
 
+To delete a dashboard:
+```python3
+dashboard.delete()
+```
+
 Update dashboard colors, some properties and save changes to server:
 ```python3
 # Update label_colors mapping
@@ -65,6 +70,15 @@ Create the embed configuration for a dashboard:
 embed = dashboard.create_embed(allowed_domains=[])
 ```
 
+Copy a dashboard:
+```python3
+dashboard_copy = dashboard.copy_dashboard(dashboard_payload={
+    "css": "",
+    "dashboard_title": "your-new-dashboard-title",
+    "duplicate_slices": False,
+    "json_metadata": "{}",
+})
+```
 
 ### Export one ore more dashboard
 
@@ -90,11 +104,23 @@ dashboard.export(
 This functionality is also available in the same manner for datasets
 
 
+### CSS Templates
+
+```python3
+# Get all CSS Templates
+css_templates = client.css_templates.find()
+
+# Get a CSS Template by name
+css_template = client.css_templates.find(template_name="Flat")[0]
+
+# Retrieve the CSS of a CSS Template
+css = css_template.css
+```
+
 ### Retrieve a Guest Token
 
 You can retrieve a guest token using the `guest_token` method. This method requires the UUID of the resource (e.g., dashboard) and uses the user's first name, last name, and username from the client instance.
 
-#### Example Usage:
 ```python3
 # Retrieve a guest token
 guest_token = client.guest_token(uuid="your-example-uuid")
