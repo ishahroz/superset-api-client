@@ -1,4 +1,5 @@
 """Dashboards."""
+
 from dataclasses import dataclass, field
 from typing import List, Optional
 
@@ -8,7 +9,7 @@ from supersetapiclient.base import Object, ObjectFactories, default_string, json
 @dataclass
 class DashboardEmbed(Object):
     allowed_domains: List[str] = field(default_factory=list)
-    uuid:str = None
+    uuid: str = None
 
 
 @dataclass
@@ -51,11 +52,11 @@ class Dashboard(Object):
             c = self._parent.client.charts.find_one(slice_name=slice_name)
             charts.append(c)
         return charts
-    
+
     def get_embed(self) -> DashboardEmbed:
         """Get the dashboard's embedded configuration"""
         client = self._parent.client
-        embed_dashboard_url = client.join_urls(self.base_url,"embedded")
+        embed_dashboard_url = client.join_urls(self.base_url, "embedded")
         response = client.get(embed_dashboard_url)
         if response.status_code == 404:
             return None
@@ -64,17 +65,18 @@ class Dashboard(Object):
     def create_embed(self, allowed_domains: List[str]) -> DashboardEmbed:
         """Set a dashboard's embedded configuration"""
         client = self._parent.client
-        embed_dashboard_url = client.join_urls(self.base_url,"embedded")
-        response = client.post(embed_dashboard_url, json={ "allowed_domains": allowed_domains })
+        embed_dashboard_url = client.join_urls(self.base_url, "embedded")
+        response = client.post(embed_dashboard_url, json={"allowed_domains": allowed_domains})
         raise_for_status(response)
         return DashboardEmbed().from_json(response.json().get("result"))
-    
+
     def copy_dashboard(self, dashboard_payload: dict) -> None:
         """Copy the dashboard with the given payload"""
         client = self._parent.client
-        copy_dashboard_url = client.join_urls(self.base_url,"copy")
+        copy_dashboard_url = client.join_urls(self.base_url, "copy")
         response = client.post(copy_dashboard_url, json=dashboard_payload)
         raise_for_status(response)
+
 
 class Dashboards(ObjectFactories):
     endpoint = "dashboard/"

@@ -1,4 +1,5 @@
 """Base classes."""
+
 import dataclasses
 import logging
 

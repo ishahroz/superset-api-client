@@ -1,4 +1,5 @@
 """Fixture and superset app for testing."""
+
 import json
 import os
 from pathlib import Path
