@@ -86,7 +86,7 @@ You can retrieve a guest token using the `guest_token` method. This method requi
 #### Example Usage:
 ```python3
 # Retrieve a guest token
-guest_token = client.guest_token(uuid="e7d7ec69-c8a4-46fb-81ff-183e2fa77b0a")
+guest_token = client.guest_token(uuid="your-example-uuid")
 ```
 
 
