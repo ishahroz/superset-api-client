@@ -63,7 +63,7 @@ class SupersetClient:
         self.saved_queries = self.saved_queries_cls(self)
 
         # Session Management
-        self._session = self._create_session()
+        self._session = None
 
     # Private Methods
     @property
@@ -107,7 +107,6 @@ class SupersetClient:
             }
         )
 
-    @property
     def _csrf_token(self, session) -> str:
         """Get the CSRF token."""
         csrf_response = session.get(
@@ -135,7 +134,7 @@ class SupersetClient:
 
     def _refresh_csrf_token(self):
         """Refresh the CSRF token."""
-        self._session.headers["X-CSRFToken"] = f"{self.csrf_token(self._session)}"
+        self._session.headers["X-CSRFToken"] = f"{self._csrf_token(self._session)}"
 
     # Public Methods
     @property
