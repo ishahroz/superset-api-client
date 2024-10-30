@@ -6,7 +6,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "superset-api-client"
+name = "superset-python-client"
 version = "1.1.0"
 description = "A simple REST API Client for Apache-Superset in Python"
 authors = ["Shahroz Ahmad <ishahrozahmad90@gmail.com>"]
