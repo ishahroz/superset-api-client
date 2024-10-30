@@ -2,12 +2,13 @@
 
 import json
 from pathlib import Path
-from typing import Union
 
 from supersetapiclient.base import raise_for_status
 
 
 class Assets:
+    """Assets."""
+
     endpoint = "assets/"
 
     def __init__(self, client):
@@ -20,14 +21,16 @@ class Assets:
 
     @property
     def import_url(self):
+        """Import URL."""
         return self.client.join_urls(self.base_url, "import/")
 
     @property
     def export_url(self):
+        """Export URL."""
         return self.client.join_urls(self.base_url, "export/")
 
-    def export(self, path: Union[Path, str]) -> None:
-        """Export object into an importable file"""
+    def export(self, path: Path | str) -> None:
+        """Export object into an importable file."""
         response = self.client.get(self.export_url)
         raise_for_status(response)
 
@@ -52,10 +55,16 @@ class Assets:
         if not file_path.exists():
             return False
         file_ext = file_path.suffix.replace(".", "")
-        passwords = {f"databases/{db}.yaml": pwd for db, pwd in (passwords or {}).items()}
+        passwords = {
+            f"databases/{db}.yaml": pwd for db, pwd in (passwords or {}).items()
+        }
 
         files = {
-            "bundle": (file_path.name, open(file_path.name, "rb"), f"application/{file_ext}"),
+            "bundle": (
+                file_path.name,
+                open(file_path.name, "rb"),
+                f"application/{file_ext}",
+            ),
             "passwords": json.dumps(passwords),
         }
         response = self.client.post(self.import_url, files=files)

@@ -12,25 +12,32 @@ except ImportError:  # pragma: no cover
 import json
 import os.path
 from pathlib import Path
-from typing import List, Union
 
 import yaml
 from requests import HTTPError
 
-from supersetapiclient.exceptions import BadRequestError, ComplexBadRequestError, MultipleFound, NotFound
+from supersetapiclient.exceptions import (
+    BadRequestError,
+    ComplexBadRequestError,
+    MultipleFound,
+    NotFound,
+)
 
 logger = logging.getLogger(__name__)
 
 
 def json_field():
+    """Get the JSON field."""
     return dataclasses.field(default=None, repr=False)
 
 
 def default_string():
+    """Get the default string."""
     return dataclasses.field(default="", repr=False)
 
 
 def raise_for_status(response):
+    """Raise an exception for a bad response."""
     try:
         response.raise_for_status()
     except HTTPError as e:
@@ -42,11 +49,17 @@ def raise_for_status(response):
                 errors = response.json()["errors"]
             except Exception:
                 raise e
-            raise ComplexBadRequestError(*e.args, request=e.request, response=e.response, errors=errors) from None
-        raise BadRequestError(*e.args, request=e.request, response=e.response, message=error_msg) from None
+            raise ComplexBadRequestError(
+                *e.args, request=e.request, response=e.response, errors=errors
+            ) from None
+        raise BadRequestError(
+            *e.args, request=e.request, response=e.response, message=error_msg
+        ) from None
 
 
 class Object:
+    """Object."""
+
     _parent = None
     JSON_FIELDS = []
 
@@ -62,18 +75,20 @@ class Object:
 
     @classmethod
     def from_json(cls, json: dict):
-        """Create Object from json
+        """Create Object from json.
 
         Args:
             json (dict): a dictionary
 
         Returns:
             Object: return the related object
+
         """
         field_names = cls.field_names()
         return cls(**{k: v for k, v in json.items() if k in field_names})
 
     def to_json(self, columns):
+        """Convert the object to a JSON object."""
         o = {}
         for c in columns:
             if not hasattr(self, c):
@@ -91,10 +106,11 @@ class Object:
 
     @property
     def base_url(self) -> str:
+        """Get the base URL."""
         return self._parent.client.join_urls(self._parent.base_url, self.id)
 
-    def export(self, path: Union[Path, str]) -> None:
-        """Export object to path"""
+    def export(self, path: Path | str) -> None:
+        """Export object to path."""
         self._parent.export(ids=[self.id], path=path)
 
     def fetch(self) -> None:
@@ -118,10 +134,13 @@ class Object:
         raise_for_status(response)
 
     def delete(self) -> bool:
+        """Delete the object."""
         return self._parent.delete(id=self.id)
 
 
 class ObjectFactories:
+    """Object factories."""
+
     endpoint = ""
     base_object: Object = None
 
@@ -132,23 +151,28 @@ class ObjectFactories:
 
         Args:
             client (client): superset client
+
         """
         self.client = client
 
     @cached_property
     def _infos(self):
-        # Get infos
-        response = self.client.get(self.info_url, params={"q": json.dumps(self._INFO_QUERY)})
+        """Get the infos."""
+        response = self.client.get(
+            self.info_url, params={"q": json.dumps(self._INFO_QUERY)}
+        )
 
         raise_for_status(response)
         return response.json()
 
     @property
     def add_columns(self):
+        """Get the columns to add."""
         return [e.get("name") for e in self._infos.get("add_columns", [])]
 
     @property
     def edit_columns(self):
+        """Get the columns to edit."""
         return [e.get("name") for e in self._infos.get("edit_columns", [])]
 
     @property
@@ -158,27 +182,30 @@ class ObjectFactories:
 
     @property
     def info_url(self):
+        """Get the info URL."""
         return self.client.join_urls(self.base_url, "_info")
 
     @property
     def import_url(self):
+        """Get the import URL."""
         return self.client.join_urls(self.base_url, "import/")
 
     @property
     def export_url(self):
+        """Get the export URL."""
         return self.client.join_urls(self.base_url, "export/")
 
-    def get(self, id: int):
+    def get(self, object_id: int):
         """Get an object by id."""
-        url = self.client.join_urls(self.base_url, id)
+        url = self.client.join_urls(self.base_url, object_id)
         response = self.client.get(url)
         raise_for_status(response)
         response = response.json()
 
         object_json = response.get("result")
-        object_json["id"] = id
-        object = self.base_object.from_json(object_json)
-        object._parent = self
+        object_json["id"] = object_id
+        object_ = self.base_object.from_json(object_json)
+        object_._parent = self
 
         return object
 
@@ -222,7 +249,6 @@ class ObjectFactories:
 
     def add(self, obj) -> int:
         """Create an object on remote."""
-
         o = obj.to_json(columns=self.add_columns)
         response = self.client.post(self.base_url, json=o)
         raise_for_status(response)
@@ -230,8 +256,8 @@ class ObjectFactories:
         obj._parent = self
         return obj.id
 
-    def export(self, ids: List[int], path: Union[Path, str]) -> None:
-        """Export object into an importable file"""
+    def export(self, ids: list[int], path: Path | str) -> None:
+        """Export object into an importable file."""
         ids_array = ",".join([str(i) for i in ids])
         response = self.client.get(self.export_url, params={"q": f"[{ids_array}]"})
 
@@ -257,9 +283,9 @@ class ObjectFactories:
             return
         raise ValueError(f"Unknown content type {content_type}")
 
-    def delete(self, id: int) -> bool:
+    def delete(self, object_id: int) -> bool:
         """Delete a object on remote."""
-        url = self.client.join_urls(self.base_url, id)
+        url = self.client.join_urls(self.base_url, object_id)
         response = self.client.delete(url)
         raise_for_status(response)
         return response.json().get("message") == "OK"
@@ -275,7 +301,9 @@ class ObjectFactories:
         following format: {"MyDatabase": "my_password"}
         """
         data = {"overwrite": json.dumps(overwrite)}
-        passwords = {f"databases/{db}.yaml": pwd for db, pwd in (passwords or {}).items()}
+        passwords = {
+            f"databases/{db}.yaml": pwd for db, pwd in (passwords or {}).items()
+        }
         file_name = os.path.split(file_path)[-1]
         file_ext = os.path.splitext(file_name)[-1].lstrip(".").lower()
         with open(file_path, "rb") as f:

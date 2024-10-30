@@ -7,6 +7,7 @@ import jwt
 import requests.adapters
 import requests.exceptions
 import requests_oauthlib
+
 from supersetapiclient.assets import Assets
 from supersetapiclient.base import raise_for_status
 from supersetapiclient.charts import Charts
@@ -77,7 +78,6 @@ class SupersetClient:
 
     def _authenticate(self) -> dict:
         """Authenticate and return the tokens."""
-
         # No need for session here because we are before authentication
         response = requests.post(
             self.login_endpoint,
@@ -120,7 +120,9 @@ class SupersetClient:
     def _refresh_access_token(self):
         """Refresh the access token."""
         # Create a new session to avoid messing up the current session
-        refresh_r = requests_oauthlib.OAuth2Session(token={"access_token": self._refresh_token}).post(self.refresh_endpoint)
+        refresh_r = requests_oauthlib.OAuth2Session(
+            token={"access_token": self._refresh_token}
+        ).post(self.refresh_endpoint)
         raise_for_status(refresh_r)
         new_token = refresh_r.json()
         if "refresh_token" not in new_token:
@@ -147,8 +149,12 @@ class SupersetClient:
             now = datetime.now().timestamp()
             # Decode tokens to get their expiry times without verifying signatures
             tokens = {
-                "access": jwt.decode(self._access_token, options={"verify_signature": False})["exp"],
-                "refresh": jwt.decode(self._refresh_token, options={"verify_signature": False})["exp"],
+                "access": jwt.decode(
+                    self._access_token, options={"verify_signature": False}
+                )["exp"],
+                "refresh": jwt.decode(
+                    self._refresh_token, options={"verify_signature": False}
+                )["exp"],
             }
 
             # Check if the refresh token has expired and create a new session if so
@@ -165,18 +171,22 @@ class SupersetClient:
 
     @property
     def get(self):
+        """Get a resource."""
         return self.session.get
 
     @property
     def post(self):
+        """Post a resource."""
         return self.session.post
 
     @property
     def put(self):
+        """Put a resource."""
         return self.session.put
 
     @property
     def delete(self):
+        """Delete a resource."""
         return self.session.delete
 
     @staticmethod
@@ -185,6 +195,7 @@ class SupersetClient:
 
         Returns:
             str: joined urls
+
         """
         parts = [str(part).strip("/") for part in args]
         if str(args[-1]).endswith("/"):
@@ -192,7 +203,7 @@ class SupersetClient:
         return "/".join(parts)
 
     def run(self, database_id, query, query_limit=None):
-        """Sends SQL queries to Superset and returns the resulting dataset.
+        """Send SQL queries to Superset and returns the resulting dataset.
 
         :param database_id: Database ID of DB to query
         :type database_id: int
@@ -227,18 +238,22 @@ class SupersetClient:
 
     @property
     def password(self) -> str:
+        """Get the password."""
         return "*" * len(self._password)
 
     @property
     def login_endpoint(self) -> str:
+        """Get the login endpoint."""
         return self.join_urls(self.base_url, "security/login")
 
     @property
     def refresh_endpoint(self) -> str:
+        """Get the refresh endpoint."""
         return self.join_urls(self.base_url, "security/refresh")
 
     @property
     def guest_token_endpoint(self) -> str:
+        """Get the guest token endpoint."""
         return self.join_urls(self.base_url, "security/guest_token/")
 
     @property
@@ -247,6 +262,7 @@ class SupersetClient:
 
     @property
     def csrf_token_endpoint(self) -> str:
+        """Get the CSRF token endpoint."""
         return self.join_urls(self.base_url, "security/csrf_token/")
 
     def guest_token(self, uuid: str) -> str:
@@ -273,7 +289,8 @@ class SupersetClient:
 
 
 class NoVerifyHTTPAdapter(requests.adapters.HTTPAdapter):
-    """An HTTP adapter that ignores TLS validation errors"""
+    """An HTTP adapter that ignores TLS validation errors."""
 
     def cert_verify(self, conn, url, verify, cert):
+        """Verify the certificate."""
         super().cert_verify(conn=conn, url=url, verify=False, cert=cert)

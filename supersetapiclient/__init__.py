@@ -1,4 +1,5 @@
-# Configure logging
+"""Superset API client."""
+
 import logging
 
 from supersetapiclient.client import SupersetClient  # noqa

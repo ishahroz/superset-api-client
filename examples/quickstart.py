@@ -1,3 +1,5 @@
+"""Quickstart example."""
+
 from time import sleep
 
 from supersetapiclient import SupersetClient

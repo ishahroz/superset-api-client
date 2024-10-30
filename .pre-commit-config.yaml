@@ -11,19 +11,19 @@ repos:
     hooks:
       - id: black
         name: black
-        stages: [ commit ]
+        stages: [commit]
         entry: black --check --diff
         language: system
-        types: [ python ]
+        types: [python]
       - id: isort
         name: isort
-        stages: [ commit ]
+        stages: [commit]
         entry: isort --check --diff
-        types: [ python ]
+        types: [python]
         language: system
       - id: flake8
         name: flake8
-        stages: [ commit ]
+        stages: [commit]
         entry: flake8
-        types: [ python ]
+        types: [python]
         language: system
