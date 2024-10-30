@@ -1,9 +1,73 @@
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
-
-[tool.black]
-line-length = 127
+[project]
+requires-python = ">=3.12"
 
 [tool.poetry]
-name = "superset-python-client"
+name = "supersetapiclient"
+version = "1.1.0"
+description = "A simple REST API Client for Apache-Superset in Python"
+authors = ["Shahroz Ahmad <ishahrozahmad90@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ishahroz/superset-python-client"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+requests = "^2.32.3"
+requests-oauthlib = "^2.0.0"
+pyyaml = "^6.0.2"
+cached-property = "^1.5.2"
+pyjwt = "^2.9.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.7.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 127
+
+[tool.ruff.lint]
+extend-select = ["E501"]
+
+#[tool.ruff]
+#line_length = 127
+#select = ["B", "C", "E", "F", "W", "T4"]
+#exclude = [".git", ".venv", ".tox", "poetry.lock"]
+
+[tool.ruff.lint.isort]
+case-sensitive = true
+relative-imports-order = "closest-to-furthest"
+
+[tool.ruff.lint.isort.sections]
+"supersetapiclient" = ["supersetapiclient"]
+
+
+# [options.extras_require]
+# dev =
+#     flake8
+#     black
+#     isort
+#     pytest
+#     requests-mock
+#     pytest-docker
+#     pytest-cov
+#     coveralls
+#     pre-commit
+# build = build
+
+# [flake8]
+# ignore = E203, E266, E501, W503
+# max-line-length = 127
+# max-complexity = 18
+# select = B,C,E,F,W,T4
+# exclude = .git,.venv,.tox
+
+# [isort]
+# multi_line_output=3
+# include_trailing_comma=True
+# force_grid_wrap=0
+# use_parentheses=True
+# line_length=127
+# profile=black

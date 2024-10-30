@@ -1,18 +1,12 @@
-"""A Superset REST Api Client."""
+"""A Superset REST API Client."""
 
-import getpass
 import logging
+from datetime import datetime
 
-try:
-    from functools import cached_property
-except ImportError:  # pragma: no cover
-    # Python<3.8
-    from cached_property import cached_property
-
+import jwt
 import requests.adapters
 import requests.exceptions
 import requests_oauthlib
-
 from supersetapiclient.assets import Assets
 from supersetapiclient.base import raise_for_status
 from supersetapiclient.charts import Charts
@@ -67,27 +61,108 @@ class SupersetClient:
         self.databases = self.databases_cls(self)
         self.saved_queries = self.saved_queries_cls(self)
 
-    @cached_property
+        # Session Management
+        self._session = self._create_session()
+
+    # Private Methods
+    @property
     def _token(self):
-        return self.authenticate()
+        """Get the tokens."""
+        if not (self._access_token and self._refresh_token):
+            self._authenticate()
+        return {
+            "access_token": self._access_token,
+            "refresh_token": self._refresh_token,
+        }
 
-    @cached_property
-    def session(self):
-        session = requests_oauthlib.OAuth2Session(token=self._token)
-        session.hooks["response"] = [self.token_refresher]
+    def _authenticate(self) -> dict:
+        """Authenticate and return the tokens."""
+
+        # No need for session here because we are before authentication
+        response = requests.post(
+            self.login_endpoint,
+            json={
+                "username": self.username,
+                "password": self._password,
+                "provider": self.provider,
+                "refresh": "true",
+            },
+        )
+        raise_for_status(response)
+        self._access_token, self._refresh_token = (
+            response.json()["access_token"],
+            response.json()["refresh_token"],
+        )
+
+    def _create_session(self):
+        """Create and store a new session."""
+        self._access_token, self._refresh_token = None, None
+        self._session = requests_oauthlib.OAuth2Session(token=self._token)
         if self.http_adapter_cls:
-            session.mount(self.host, adapter=self.http_adapter_cls())
-
-        # Update headers
-        session.headers.update(
+            self._session.mount(self.host, adapter=self.http_adapter_cls())
+        self._session.headers.update(
             {
-                "X-CSRFToken": f"{self.csrf_token(session)}",
+                "X-CSRFToken": f"{self._csrf_token(self._session)}",
                 "Referer": f"{self.base_url}",
             }
         )
-        return session
 
-    # Method shortcuts
+    @property
+    def _csrf_token(self, session) -> str:
+        """Get the CSRF token."""
+        csrf_response = session.get(
+            self.csrf_token_endpoint,
+            headers={"Referer": f"{self.base_url}"},
+        )
+        raise_for_status(csrf_response)  # Check CSRF Token went well
+        return csrf_response.json().get("result")
+
+    def _refresh_access_token(self):
+        """Refresh the access token."""
+        # Create a new session to avoid messing up the current session
+        refresh_r = requests_oauthlib.OAuth2Session(token={"access_token": self._refresh_token}).post(self.refresh_endpoint)
+        raise_for_status(refresh_r)
+        new_token = refresh_r.json()
+        if "refresh_token" not in new_token:
+            new_token["refresh_token"] = self._refresh_token
+        self._access_token, self._refresh_token = (
+            new_token["access_token"],
+            new_token["refresh_token"],
+        )
+        self._session.token = new_token
+
+    def _refresh_csrf_token(self):
+        """Refresh the CSRF token."""
+        self._session.headers["X-CSRFToken"] = f"{self.csrf_token(self._session)}"
+
+    # Public Methods
+    @property
+    def session(self):
+        """Get or create a session, checking token expiry."""
+        if self._session is None:
+            self._create_session()
+            return self._session
+
+        try:
+            now = datetime.now().timestamp()
+            # Decode tokens to get their expiry times without verifying signatures
+            tokens = {
+                "access": jwt.decode(self._access_token, options={"verify_signature": False})["exp"],
+                "refresh": jwt.decode(self._refresh_token, options={"verify_signature": False})["exp"],
+            }
+
+            # Check if the refresh token has expired and create a new session if so
+            if now >= tokens["refresh"]:
+                self._create_session()
+            # Check if the access token has expired and refresh it if so
+            elif now >= tokens["access"]:
+                self._refresh_access_token()
+                self._refresh_csrf_token()
+        except jwt.InvalidTokenError:
+            self._create_session()
+
+        return self._session
+
     @property
     def get(self):
         return self.session.get
@@ -115,55 +190,6 @@ class SupersetClient:
         if str(args[-1]).endswith("/"):
             parts.append("")  # Preserve trailing slash
         return "/".join(parts)
-
-    def authenticate(self) -> dict:
-        # Try authentication and define session
-        if self.username is None:
-            self.username = getpass.getuser()
-        if self._password is None:
-            self._password = getpass.getpass()
-
-        # No need for session here because we are before authentication
-        response = requests.post(
-            self.login_endpoint,
-            json={
-                "username": self.username,
-                "password": self._password,
-                "provider": self.provider,
-                "refresh": "true",
-            },
-        )
-        raise_for_status(response)
-        return response.json()
-
-    def token_refresher(self, r, *args, **kwargs):
-        """A requests response hook for token refresh."""
-        if r.status_code == 401:
-            # Check if token has expired
-            try:
-                msg = r.json().get("msg")
-            except requests.exceptions.JSONDecodeError:
-                return r
-            if msg != "Token has expired":
-                return r
-            refresh_token = self.session.token["refresh_token"]
-            tmp_token = {"access_token": refresh_token}
-
-            # Create a new session to avoid messing up the current session
-            refresh_r = requests_oauthlib.OAuth2Session(token=tmp_token).post(self.refresh_endpoint)
-            raise_for_status(refresh_r)
-
-            new_token = refresh_r.json()
-            if "refresh_token" not in new_token:
-                new_token["refresh_token"] = refresh_token
-            self.session.token = new_token
-
-            # Set new authorization header
-            bearer = f"Bearer {new_token['access_token']}"
-            r.request.headers["Authorization"] = bearer
-
-            return self.session.send(r.request, verify=False)
-        return r
 
     def run(self, database_id, query, query_limit=None):
         """Sends SQL queries to Superset and returns the resulting dataset.
@@ -219,14 +245,9 @@ class SupersetClient:
     def _sql_endpoint(self) -> str:
         return self.join_urls(self.host, "superset/sql_json/")
 
-    def csrf_token(self, session) -> str:
-        # Get CSRF Token
-        csrf_response = session.get(
-            self.join_urls(self.base_url, "security/csrf_token/"),
-            headers={"Referer": f"{self.base_url}"},
-        )
-        raise_for_status(csrf_response)  # Check CSRF Token went well
-        return csrf_response.json().get("result")
+    @property
+    def csrf_token_endpoint(self) -> str:
+        return self.join_urls(self.base_url, "security/csrf_token/")
 
     def guest_token(self, uuid: str) -> str:
         """Retrieve a guest token from the Superset API.
@@ -239,7 +260,11 @@ class SupersetClient:
         request_body = {
             "resources": [{"id": uuid, "type": "dashboard"}],
             "rls": [],
-            "user": {"first_name": self.firstname, "last_name": self.lastname, "username": self.username},
+            "user": {
+                "first_name": self.firstname,
+                "last_name": self.lastname,
+                "username": self.username,
+            },
         }
 
         response = self.post(self.guest_token_endpoint, json=request_body)
