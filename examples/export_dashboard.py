@@ -1,3 +1,5 @@
+"""Export dashboard example."""
+
 from supersetapiclient.client import SupersetClient
 
 client = SupersetClient(

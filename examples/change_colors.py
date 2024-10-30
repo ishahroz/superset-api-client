@@ -1,3 +1,5 @@
+"""Change colors example."""
+
 from supersetapiclient.client import SupersetClient
 
 client = SupersetClient(

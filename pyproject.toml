@@ -1,9 +1,79 @@
-[build-system]
-requires = ["setuptools", "wheel"]
-build-backend = "setuptools.build_meta"
+[project]
+requires-python = ">=3.12"
 
-[tool.black]
-line-length = 127
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "superset-python-client"
+name = "supersetapiclient"
+version = "1.1.0"
+description = "A simple REST API Client for Apache-Superset in Python"
+authors = ["Shahroz Ahmad <ishahrozahmad90@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+repository = "https://github.com/ishahroz/superset-python-client"
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+requests = "^2.32.3"
+requests-oauthlib = "^2.0.0"
+pyyaml = "^6.0.2"
+cached-property = "^1.5.2"
+pyjwt = "^2.9.0"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.7.1"
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".venv",
+    ".tox",
+    "poetry.lock",
+    ".eggs",
+    ".nox",
+    ".ruff_cache",
+    ".vscode",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "site-packages",
+    "venv",
+    "tests"
+]
+line-length = 88
+indent-width = 4
+target-version = "py312"
+
+[tool.ruff.lint]
+select = [
+    "E", # pycodestyle errors
+    "F", # Pyflakes
+    "W", # pycodestyle warnings
+    "C90", # McCabe complexity
+    "I", # isort
+    "N", # pep8-naming
+    "D", # pydocstyle
+    "UP", # pyupgrade
+    "B", # flake8-bugbear
+    "A", # flake8-builtins
+]
+ignore = [
+    "D105", # Missing docstring in public function
+    "D107", # Missing docstring in public _init__ method definitions
+    "N818", # Custom exception definitions that omit the Error suffix
+    "B904",  # Raise in except
+    "D203",  # Ignore 'one-blank-line-before-class' in favor of 'no-blank-line-before-class'
+    "D213",  # Ignore 'multi-line-summary-second-line' in favor of 'multi-line-summary-first-line'
+]
+fixable = ["ALL"]
+unfixable = []
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"

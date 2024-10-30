@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python Debugger: Main File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/examples/quickstart.py",
+      "console": "integratedTerminal",
+      "env": {
+        "OAUTHLIB_INSECURE_TRANSPORT": "1"
+      },
+      "justMyCode": false
+    }
+  ]
+}

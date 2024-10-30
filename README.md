@@ -1,4 +1,5 @@
 # superset-python-client
+
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI version](https://badge.fury.io/py/superset-api-client.svg)](https://badge.fury.io/py/superset-api-client)
 [![Coverage Status](https://coveralls.io/repos/github/opus-42/superset-api-client/badge.svg?branch=develop)](https://coveralls.io/github/opus-42/superset-api-client?branch=develop)
@@ -10,6 +11,7 @@ This is a Alpha version. Stability is not guaranteed.
 ## Usage
 
 Setup a superset client:
+
 ```python3
 from supersetapiclient.client import SupersetClient
 
@@ -30,7 +32,9 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 ```
 
 ### Quickstart
+
 Get all dashboards or find one by name:
+
 ```python3
 # Get all dashboards
 dashboards = client.dashboards.find()
@@ -40,11 +44,13 @@ dashboard = client.dashboards.find(dashboard_title="Example")[0]
 ```
 
 To delete a dashboard:
+
 ```python3
 dashboard.delete()
 ```
 
 Update dashboard colors, some properties and save changes to server:
+
 ```python3
 # Update label_colors mapping
 print(dashboard.colors)
@@ -61,16 +67,19 @@ dashboard.save()
 ```
 
 Get the embed configuration for a dashboard:
+
 ```python3
 embed = dashboard.get_embed()
 ```
 
 Create the embed configuration for a dashboard:
+
 ```python3
 embed = dashboard.create_embed(allowed_domains=[])
 ```
 
 Copy a dashboard:
+
 ```python3
 dashboard_copy = dashboard.copy_dashboard(dashboard_payload={
     "css": "",
@@ -103,7 +112,6 @@ dashboard.export(
 
 This functionality is also available in the same manner for datasets
 
-
 ### CSS Templates
 
 ```python3
@@ -126,8 +134,8 @@ You can retrieve a guest token using the `guest_token` method. This method requi
 guest_token = client.guest_token(uuid="your-example-uuid")
 ```
 
-
 # Contributing
+
 Before committing to this repository, you must have [pre-commit](https://pre-commit.com) installed, and install
 the following pre-commit hooks:
 
