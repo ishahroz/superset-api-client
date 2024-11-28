@@ -20,6 +20,13 @@ class DashboardEmbed(Object):
 
 
 @dataclass
+class DashboardCopy(Object):
+    """Dashboard copy."""
+
+    id: int | None = None
+
+
+@dataclass
 class Dashboard(Object):
     """Dashboard."""
 
@@ -81,12 +88,13 @@ class Dashboard(Object):
         raise_for_status(response)
         return DashboardEmbed().from_json(response.json().get("result"))
 
-    def copy_dashboard(self, dashboard_payload: dict) -> None:
+    def copy_dashboard(self, dashboard_payload: dict) -> DashboardCopy:
         """Copy the dashboard with the given payload."""
         client = self._parent.client
         copy_dashboard_url = client.join_urls(self.base_url, "copy")
         response = client.post(copy_dashboard_url, json=dashboard_payload)
         raise_for_status(response)
+        return DashboardCopy().from_json(response.json().get("result"))
 
 
 class Dashboards(ObjectFactories):
