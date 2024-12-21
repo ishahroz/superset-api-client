@@ -43,10 +43,10 @@ dashboards = client.dashboards.find()
 dashboard = client.dashboards.find(dashboard_title="Example")[0]
 ```
 
-To delete a dashboard:
+To delete a dashboard by id:
 
 ```python3
-dashboard.delete()
+dashboard = client.dashboards.delete(object_id=142)
 ```
 
 Update dashboard colors, some properties and save changes to server:
